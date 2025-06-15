@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Camera, Upload, TrendingUp, Calendar, Target, Brain, Dumbbell, Heart } from 'lucide-react';
+import { Camera, Upload, TrendingUp, Calendar, Target, Brain, Dumbbell, Heart, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
@@ -8,12 +7,14 @@ import FoodAnalysisModal from '@/components/FoodAnalysisModal';
 import NutritionCard from '@/components/NutritionCard';
 import QuickStats from '@/components/QuickStats';
 import ExerciseModal from '@/components/ExerciseModal';
+import AIChatModal from '@/components/AIChatModal';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [showExercise, setShowExercise] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,12 +27,10 @@ const Index = () => {
   const handleCameraCapture = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      // Simulate camera capture
       toast({
         title: "Camera Ready!",
         description: "Take a photo of your food to analyze it.",
       });
-      // For demo purposes, we'll simulate analysis
       setTimeout(() => {
         simulateAnalysis(null);
       }, 1000);
@@ -81,7 +80,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-indigo-900">
       {/* Header */}
-      <header className="bg-black/40 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
+      <header className="bg-black/60 backdrop-blur-md border-b border-purple-500/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -93,6 +92,15 @@ const Index = () => {
               </h1>
             </div>
             <nav className="flex items-center space-x-4">
+              <Button 
+                onClick={() => setShowAIChat(true)}
+                variant="ghost" 
+                size="sm" 
+                className="text-purple-300 hover:bg-purple-800/30"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Ask AI
+              </Button>
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm" className="text-purple-300 hover:bg-purple-800/30">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -125,7 +133,7 @@ const Index = () => {
           
           {/* Upload Section */}
           <div className="max-w-md mx-auto mb-12">
-            <Card className="border-2 border-dashed border-purple-500/50 bg-gradient-to-r from-purple-900/20 to-pink-900/20 hover:border-purple-400 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25">
+            <Card className="border-2 border-dashed border-purple-500/50 bg-gradient-to-r from-purple-900/30 to-pink-900/30 hover:border-purple-400 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25">
               <CardContent className="p-8">
                 {!isAnalyzing ? (
                   <div className="space-y-6">
@@ -175,7 +183,7 @@ const Index = () => {
                       <p className="text-gray-300 text-sm">
                         Our AI is identifying your food and calculating nutrition
                       </p>
-                      <div className="w-full bg-gray-700 rounded-full h-2 mt-4">
+                      <div className="w-full bg-gray-800 rounded-full h-2 mt-4">
                         <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full animate-pulse w-3/4"></div>
                       </div>
                     </div>
@@ -187,7 +195,7 @@ const Index = () => {
 
           {/* Exercise & Yoga Section */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
-            <Card className="bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30 hover:shadow-lg hover:shadow-orange-500/25 transition-all duration-300">
+            <Card className="bg-gradient-to-br from-orange-900/30 to-red-900/30 border-orange-500/30 hover:shadow-lg hover:shadow-orange-500/25 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <Dumbbell className="w-6 h-6 text-white" />
@@ -207,7 +215,7 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-teal-900/20 to-cyan-900/20 border-teal-500/30 hover:shadow-lg hover:shadow-teal-500/25 transition-all duration-300">
+            <Card className="bg-gradient-to-br from-teal-900/30 to-cyan-900/30 border-teal-500/30 hover:shadow-lg hover:shadow-teal-500/25 transition-all duration-300">
               <CardHeader>
                 <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
                   <Heart className="w-6 h-6 text-white" />
@@ -234,7 +242,7 @@ const Index = () => {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mt-16">
-          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30">
+          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-500/30">
             <CardHeader>
               <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-4">
                 <TrendingUp className="w-6 h-6 text-white" />
@@ -248,7 +256,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-500/30">
+          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-500/30">
             <CardHeader>
               <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
                 <Calendar className="w-6 h-6 text-white" />
@@ -262,7 +270,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-orange-900/20 to-red-900/20 border-orange-500/30">
+          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-orange-900/30 to-red-900/30 border-orange-500/30">
             <CardHeader>
               <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4">
                 <Target className="w-6 h-6 text-white" />
@@ -292,6 +300,14 @@ const Index = () => {
         <ExerciseModal
           isOpen={showExercise}
           onClose={() => setShowExercise(false)}
+        />
+      )}
+
+      {/* AI Chat Modal */}
+      {showAIChat && (
+        <AIChatModal
+          isOpen={showAIChat}
+          onClose={() => setShowAIChat(false)}
         />
       )}
     </div>
