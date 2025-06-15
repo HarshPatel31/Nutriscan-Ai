@@ -160,7 +160,7 @@ const DietPlan = () => {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const currentTime = currentHour * 60 + minute;
+    const currentTime = currentHour * 60 + currentMinute;
 
     weeklyMealPlan.forEach(dayPlan => {
       Object.entries(dayPlan.meals).forEach(([mealType, meal]) => {
