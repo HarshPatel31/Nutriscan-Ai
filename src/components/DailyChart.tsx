@@ -11,18 +11,25 @@ const DailyChart = () => {
   ];
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300">
+    <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-gray-600/30">
       <CardHeader>
-        <CardTitle>Daily Breakdown</CardTitle>
+        <CardTitle className="text-white">Daily Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="meal" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="calories" fill="#3B82F6" name="Calories" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis dataKey="meal" stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: '#1F2937',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: '#F9FAFB'
+              }}
+            />
+            <Bar dataKey="calories" fill="#8B5CF6" name="Calories" />
             <Bar dataKey="protein" fill="#10B981" name="Protein (g)" />
             <Bar dataKey="carbs" fill="#F59E0B" name="Carbs (g)" />
             <Bar dataKey="fat" fill="#EF4444" name="Fat (g)" />

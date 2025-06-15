@@ -14,23 +14,30 @@ const WeeklyProgress = () => {
   ];
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300">
+    <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-gray-600/30">
       <CardHeader>
-        <CardTitle>Weekly Progress</CardTitle>
+        <CardTitle className="text-white">Weekly Progress</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis yAxisId="left" />
-            <YAxis yAxisId="right" orientation="right" />
-            <Tooltip />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis dataKey="day" stroke="#9CA3AF" />
+            <YAxis yAxisId="left" stroke="#9CA3AF" />
+            <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: '#1F2937',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: '#F9FAFB'
+              }}
+            />
             <Line 
               yAxisId="left"
               type="monotone" 
               dataKey="calories" 
-              stroke="#3B82F6" 
+              stroke="#8B5CF6" 
               strokeWidth={3}
               name="Calories"
             />
