@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Target, TrendingUp, TrendingDown, Minus, Brain, Calendar, Award, Check, Bell, Scale } from 'lucide-react';
+import { ArrowLeft, Target, TrendingUp, TrendingDown, Minus, Brain, Calendar, Award, Check, Bell, Scale, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -15,6 +15,7 @@ const DietPlan = () => {
   const [userWeight, setUserWeight] = useState('70');
   const [completedMeals, setCompletedMeals] = useState<{[key: string]: boolean}>({});
   const [alarmEnabled, setAlarmEnabled] = useState(true);
+  const [aiQuery, setAiQuery] = useState('');
 
   const goals = [
     {
@@ -59,28 +60,64 @@ const DietPlan = () => {
     {
       day: 'Monday',
       meals: {
-        breakfast: { name: 'Oatmeal with berries and nuts', time: '08:00', id: 'mon-breakfast' },
-        lunch: { name: 'Grilled chicken with quinoa salad', time: '12:30', id: 'mon-lunch' },
-        dinner: { name: 'Baked salmon with roasted vegetables', time: '19:00', id: 'mon-dinner' },
-        snack: { name: 'Greek yogurt with honey', time: '15:30', id: 'mon-snack' }
+        breakfast: { name: 'Oatmeal with berries and nuts', time: '08:00', id: 'mon-breakfast', image: '🥣' },
+        lunch: { name: 'Grilled chicken with quinoa salad', time: '12:30', id: 'mon-lunch', image: '🍗' },
+        dinner: { name: 'Baked salmon with roasted vegetables', time: '19:00', id: 'mon-dinner', image: '🐟' },
+        snack: { name: 'Greek yogurt with honey', time: '15:30', id: 'mon-snack', image: '🥛' }
       }
     },
     {
       day: 'Tuesday',
       meals: {
-        breakfast: { name: 'Avocado toast with poached egg', time: '08:00', id: 'tue-breakfast' },
-        lunch: { name: 'Turkey and hummus wrap', time: '12:30', id: 'tue-lunch' },
-        dinner: { name: 'Lean beef stir-fry with brown rice', time: '19:00', id: 'tue-dinner' },
-        snack: { name: 'Mixed nuts and apple', time: '15:30', id: 'tue-snack' }
+        breakfast: { name: 'Avocado toast with poached egg', time: '08:00', id: 'tue-breakfast', image: '🥑' },
+        lunch: { name: 'Turkey and hummus wrap', time: '12:30', id: 'tue-lunch', image: '🌯' },
+        dinner: { name: 'Lean beef stir-fry with brown rice', time: '19:00', id: 'tue-dinner', image: '🥩' },
+        snack: { name: 'Mixed nuts and apple', time: '15:30', id: 'tue-snack', image: '🍎' }
       }
     },
     {
       day: 'Wednesday',
       meals: {
-        breakfast: { name: 'Smoothie bowl with protein powder', time: '08:00', id: 'wed-breakfast' },
-        lunch: { name: 'Tuna salad with whole grain crackers', time: '12:30', id: 'wed-lunch' },
-        dinner: { name: 'Grilled tofu with sweet potato', time: '19:00', id: 'wed-dinner' },
-        snack: { name: 'Cottage cheese with berries', time: '15:30', id: 'wed-snack' }
+        breakfast: { name: 'Smoothie bowl with protein powder', time: '08:00', id: 'wed-breakfast', image: '🥤' },
+        lunch: { name: 'Tuna salad with whole grain crackers', time: '12:30', id: 'wed-lunch', image: '🐟' },
+        dinner: { name: 'Grilled tofu with sweet potato', time: '19:00', id: 'wed-dinner', image: '🍠' },
+        snack: { name: 'Cottage cheese with berries', time: '15:30', id: 'wed-snack', image: '🫐' }
+      }
+    },
+    {
+      day: 'Thursday',
+      meals: {
+        breakfast: { name: 'Whole grain pancakes with fruits', time: '08:00', id: 'thu-breakfast', image: '🥞' },
+        lunch: { name: 'Chicken Caesar salad', time: '12:30', id: 'thu-lunch', image: '🥗' },
+        dinner: { name: 'Grilled fish with asparagus', time: '19:00', id: 'thu-dinner', image: '🐠' },
+        snack: { name: 'Protein bar and banana', time: '15:30', id: 'thu-snack', image: '🍌' }
+      }
+    },
+    {
+      day: 'Friday',
+      meals: {
+        breakfast: { name: 'Chia seed pudding with mango', time: '08:00', id: 'fri-breakfast', image: '🥭' },
+        lunch: { name: 'Quinoa Buddha bowl', time: '12:30', id: 'fri-lunch', image: '🍲' },
+        dinner: { name: 'Lemon herb chicken with vegetables', time: '19:00', id: 'fri-dinner', image: '🍋' },
+        snack: { name: 'Hummus with carrot sticks', time: '15:30', id: 'fri-snack', image: '🥕' }
+      }
+    },
+    {
+      day: 'Saturday',
+      meals: {
+        breakfast: { name: 'Veggie omelet with whole wheat toast', time: '09:00', id: 'sat-breakfast', image: '🍳' },
+        lunch: { name: 'Grilled veggie and cheese sandwich', time: '13:00', id: 'sat-lunch', image: '🥪' },
+        dinner: { name: 'Beef and vegetable stew', time: '19:30', id: 'sat-dinner', image: '🍲' },
+        snack: { name: 'Trail mix with dried fruits', time: '16:00', id: 'sat-snack', image: '🥜' }
+      }
+    },
+    {
+      day: 'Sunday',
+      meals: {
+        breakfast: { name: 'French toast with fresh berries', time: '09:30', id: 'sun-breakfast', image: '🍓' },
+        lunch: { name: 'Mediterranean quinoa salad', time: '13:30', id: 'sun-lunch', image: '🥗' },
+        dinner: { name: 'Grilled shrimp with rice pilaf', time: '19:00', id: 'sun-dinner', image: '🍤' },
+        snack: { name: 'Dark chocolate and almonds', time: '16:30', id: 'sun-snack', image: '🍫' }
       }
     }
   ];
@@ -107,6 +144,15 @@ const DietPlan = () => {
     }
   };
 
+  const handleAiSearch = async () => {
+    if (!aiQuery.trim()) return;
+    
+    toast({
+      title: "AI Search",
+      description: `Searching for: "${aiQuery}". This feature requires OpenAI API integration.`,
+    });
+  };
+
   // Check for incomplete meals and trigger alarm
   useEffect(() => {
     if (!alarmEnabled) return;
@@ -114,7 +160,7 @@ const DietPlan = () => {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const currentTime = currentHour * 60 + currentMinute;
+    const currentTime = currentHour * 60 + minute;
 
     weeklyMealPlan.forEach(dayPlan => {
       Object.entries(dayPlan.meals).forEach(([mealType, meal]) => {
@@ -166,6 +212,38 @@ const DietPlan = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* AI Search Section */}
+        <Card className="mb-8 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-blue-500/30">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Brain className="w-5 h-5 mr-2" />
+              AI Nutrition Assistant
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex space-x-4">
+              <Input
+                type="text"
+                placeholder="Ask anything about nutrition, recipes, or diet plans..."
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                className="bg-gray-800/50 border-gray-600 text-white"
+                onKeyPress={(e) => e.key === 'Enter' && handleAiSearch()}
+              />
+              <Button
+                onClick={handleAiSearch}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
+            </div>
+            <p className="text-sm text-gray-400 mt-2">
+              Powered by OpenAI - Get personalized nutrition advice and meal suggestions
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Weight Input */}
         <Card className="mb-8 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-purple-500/30">
           <CardHeader>
@@ -322,19 +400,23 @@ const DietPlan = () => {
                 <div key={index} className="border-l-4 border-purple-500 pl-6">
                   <h3 className="text-lg font-bold text-white mb-4">{day.day}</h3>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {Object.entries(day.meals).forEach(([mealType, meal]) => (
+                    {Object.entries(day.meals).map(([mealType, meal]) => (
                       <div key={mealType} className="bg-gray-800/30 rounded-lg p-4 hover:bg-gray-700/30 transition-colors">
                         <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h4 className="font-semibold text-sm text-gray-300 mb-1 capitalize">
-                              {mealType} - {meal.time}
-                            </h4>
-                            <p className="text-sm text-gray-400">{meal.name}</p>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <span className="text-2xl">{meal.image}</span>
+                              <h4 className="font-semibold text-sm text-gray-300 capitalize">
+                                {mealType}
+                              </h4>
+                            </div>
+                            <p className="text-xs text-gray-400 mb-1">{meal.time}</p>
+                            <p className="text-sm text-gray-300">{meal.name}</p>
                           </div>
                           <Checkbox
                             checked={completedMeals[meal.id] || false}
                             onCheckedChange={(checked) => handleMealComplete(meal.id, checked as boolean)}
-                            className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                            className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600 border-gray-500"
                           />
                         </div>
                         {completedMeals[meal.id] && (
@@ -385,7 +467,7 @@ const DietPlan = () => {
             <CardContent>
               <div className="text-center">
                 <div className="text-4xl font-bold text-green-400 mb-2">
-                  {Math.round((Object.values(completedMeals).filter(Boolean).length / Object.keys(completedMeals).length) * 100) || 0}%
+                  {Math.round((Object.values(completedMeals).filter(Boolean).length / Math.max(Object.keys(completedMeals).length, 1)) * 100) || 0}%
                 </div>
                 <p className="text-gray-400 mb-4">Meals completed this week</p>
                 <div className="space-y-2">

@@ -1,61 +1,74 @@
 
 import { useState } from 'react';
-import { Calendar, TrendingUp, Target, Plus, ArrowLeft, Scale, Camera } from 'lucide-react';
+import { ArrowLeft, Calendar, TrendingUp, Apple, Droplets, Zap, Scale, Camera, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Link } from 'react-router-dom';
+import { Progress } from '@/components/ui/progress';
 import DailyChart from '@/components/DailyChart';
 import WeeklyProgress from '@/components/WeeklyProgress';
-import MealEntry from '@/components/MealEntry';
+import { Link } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [showMealEntry, setShowMealEntry] = useState(false);
   const [userWeight, setUserWeight] = useState('70');
-
-  // Mock data - adjusted based on weight
-  const calculateGoals = (weight: number) => ({
-    calories: { current: 1850, target: Math.round(weight * 30) },
-    protein: { current: 85, target: Math.round(weight * 1.6) },
-    carbs: { current: 220, target: Math.round(weight * 4) },
-    fat: { current: 65, target: Math.round(weight * 1) }
-  });
-
-  const dailyGoals = calculateGoals(parseFloat(userWeight) || 70);
+  
+  const weight = parseFloat(userWeight) || 70;
+  
+  // Weight-based calculations
+  const dailyCalories = Math.round(weight * 30);
+  const dailyProtein = Math.round(weight * 1.6);
+  const dailyCarbs = Math.round(weight * 4);
+  const dailyFat = Math.round(weight * 1);
 
   const todaysMeals = [
     {
-      name: "Oatmeal with Berries",
-      time: "08:30 AM",
+      name: 'Oatmeal with Berries',
+      time: '8:00 AM',
       calories: 320,
-      type: "breakfast",
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
+      image: '🥣',
+      consumed: true
     },
     {
-      name: "Grilled Chicken Salad",
-      time: "12:45 PM",
+      name: 'Grilled Chicken Salad',
+      time: '12:30 PM',
       calories: 450,
-      type: "lunch",
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
+      image: '🥗',
+      consumed: true
     },
     {
-      name: "Greek Yogurt",
-      time: "03:30 PM",
+      name: 'Greek Yogurt',
+      time: '3:30 PM',
       calories: 150,
-      type: "snack",
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
+      image: '🥛',
+      consumed: false
     },
     {
-      name: "Salmon with Quinoa",
-      time: "07:15 PM",
+      name: 'Salmon with Vegetables',
+      time: '7:00 PM',
       calories: 580,
-      type: "dinner",
-      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=300&fit=crop"
+      image: '🐟',
+      consumed: false
     }
   ];
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      toast({
+        title: "Image Uploaded!",
+        description: "Analyzing your food image...",
+      });
+    }
+  };
+
+  const handleCameraCapture = () => {
+    toast({
+      title: "Camera Activated!",
+      description: "Take a photo of your food to log it.",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900">
@@ -71,35 +84,24 @@ const Dashboard = () => {
                 </Button>
               </Link>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Daily Dashboard
+                Nutrition Dashboard
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              <Button 
-                onClick={() => setShowMealEntry(true)}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Meal
-              </Button>
+            <div className="text-sm text-gray-400">
+              <Calendar className="w-4 h-4 inline mr-1" />
+              {new Date().toLocaleDateString()}
             </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Weight Input */}
+        {/* Weight Input Section */}
         <Card className="mb-8 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-purple-500/30">
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Scale className="w-5 h-5 mr-2" />
-              Your Weight
+              Enter Your Weight for Personalized Tracking
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -115,147 +117,173 @@ const Dashboard = () => {
                 />
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-300">BMI: 22.9</p>
-                <p className="text-xs text-green-400">Healthy Range</p>
+                <p className="text-sm text-gray-300">BMI: {((weight / (1.75 * 1.75)).toFixed(1))}</p>
+                <p className="text-xs text-green-400">Targets Updated</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Daily Goals Overview */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          {Object.entries(dailyGoals).map(([key, goal]) => (
-            <Card key={key} className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-600/30">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300 capitalize">
-                  {key}
-                </CardTitle>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-green-500/30">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div className="font-bold text-xl text-white">{dailyCalories}</div>
+              <div className="text-sm text-gray-400">Daily Calories</div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-blue-500/30">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <div className="font-bold text-xl text-white">{dailyProtein}g</div>
+              <div className="text-sm text-gray-400">Protein Goal</div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-orange-900/30 to-red-900/30 border-orange-500/30">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Apple className="w-6 h-6 text-white" />
+              </div>
+              <div className="font-bold text-xl text-white">{dailyCarbs}g</div>
+              <div className="text-sm text-gray-400">Carbs Goal</div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300 hover:scale-105 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border-purple-500/30">
+            <CardContent className="p-4 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Droplets className="w-6 h-6 text-white" />
+              </div>
+              <div className="font-bold text-xl text-white">{dailyFat}g</div>
+              <div className="text-sm text-gray-400">Fat Goal</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Daily Progress */}
+        <div className="grid lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2">
+            <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-gray-600/30">
+              <CardHeader>
+                <CardTitle className="text-white">Daily Progress ({weight}kg based)</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white">
-                      {goal.current}
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      / {goal.target} {key === 'calories' ? 'kcal' : 'g'}
-                    </span>
+              <CardContent className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-300">Calories</span>
+                    <span className="text-white font-semibold">1250 / {dailyCalories}</span>
                   </div>
-                  <Progress 
-                    value={(goal.current / goal.target) * 100} 
-                    className="h-2"
-                  />
-                  <div className="text-xs text-gray-400">
-                    {Math.round(((goal.current / goal.target) * 100))}% of daily goal
+                  <Progress value={(1250 / dailyCalories) * 100} className="h-3" />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-300">Protein</span>
+                    <span className="text-white font-semibold">45g / {dailyProtein}g</span>
                   </div>
+                  <Progress value={(45 / dailyProtein) * 100} className="h-3" />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-300">Carbohydrates</span>
+                    <span className="text-white font-semibold">120g / {dailyCarbs}g</span>
+                  </div>
+                  <Progress value={(120 / dailyCarbs) * 100} className="h-3" />
+                </div>
+                
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-300">Fat</span>
+                    <span className="text-white font-semibold">35g / {dailyFat}g</span>
+                  </div>
+                  <Progress value={(35 / dailyFat) * 100} className="h-3" />
                 </div>
               </CardContent>
             </Card>
-          ))}
+          </div>
+
+          <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-teal-900/30 to-cyan-900/30 border-teal-500/30">
+            <CardHeader>
+              <CardTitle className="text-white">Add Food</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleCameraCapture}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Scan Food
+                </Button>
+                
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="food-upload-dashboard"
+                />
+                <label htmlFor="food-upload-dashboard">
+                  <Button className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 cursor-pointer">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Image
+                  </Button>
+                </label>
+              </div>
+              <p className="text-xs text-gray-400 text-center">
+                Upload food images for instant nutrition analysis
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Charts Section */}
+        {/* Charts */}
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
           <DailyChart />
           <WeeklyProgress />
         </div>
 
-        {/* Today's Meals with Images */}
-        <Card className="mb-8 bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-gray-600/30">
+        {/* Today's Meals */}
+        <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-gray-600/30">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-white">
-              <Calendar className="w-5 h-5" />
-              <span>Today's Meals</span>
-            </CardTitle>
+            <CardTitle className="text-white">Today's Meals</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
               {todaysMeals.map((meal, index) => (
-                <div key={index} className="flex items-center space-x-4 p-4 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors">
-                  <div className="flex-shrink-0">
-                    <img 
-                      src={meal.image} 
-                      alt={meal.name}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <div className={`w-3 h-3 rounded-full ${
-                        meal.type === 'breakfast' ? 'bg-yellow-500' :
-                        meal.type === 'lunch' ? 'bg-orange-500' :
-                        meal.type === 'dinner' ? 'bg-red-500' : 'bg-green-500'
-                      }`}>
-                      </div>
-                      <span className="text-xs text-gray-400 uppercase">{meal.type}</span>
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border transition-all duration-300 ${
+                    meal.consumed
+                      ? 'bg-green-900/20 border-green-500/30'
+                      : 'bg-gray-800/20 border-gray-600/30'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-3xl">{meal.image}</div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white">{meal.name}</h3>
+                      <p className="text-sm text-gray-400">{meal.time}</p>
+                      <p className="text-sm text-purple-400">{meal.calories} calories</p>
                     </div>
-                    <h3 className="font-semibold text-white">{meal.name}</h3>
-                    <p className="text-sm text-gray-400">{meal.time}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-white">{meal.calories} kcal</div>
-                    <Button size="sm" variant="ghost" className="text-purple-400 hover:bg-purple-800/30 p-1 h-auto">
-                      <Camera className="w-4 h-4" />
-                    </Button>
+                    <div className={`w-3 h-3 rounded-full ${
+                      meal.consumed ? 'bg-green-500' : 'bg-gray-500'
+                    }`} />
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
-        {/* Health Insights */}
-        <Card className="bg-gradient-to-r from-teal-900/30 to-cyan-900/30 border-teal-500/30">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-white">
-              <TrendingUp className="w-5 h-5 text-teal-400" />
-              <span>Daily Insights</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-white mb-2">Achievements Today</h4>
-                <ul className="space-y-2">
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-300">Met protein goal</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-300">Stayed within calorie range</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-sm text-gray-300">Low fiber intake - add more vegetables</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-white mb-2">Recommendations</h4>
-                <ul className="space-y-2">
-                  <li className="flex items-center space-x-2">
-                    <Target className="w-4 h-4 text-teal-400" />
-                    <span className="text-sm text-gray-300">Add 150 more calories for optimal energy</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <Target className="w-4 h-4 text-teal-400" />
-                    <span className="text-sm text-gray-300">Include healthy fats like avocado or nuts</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
-
-      {/* Meal Entry Modal */}
-      {showMealEntry && (
-        <MealEntry
-          isOpen={showMealEntry}
-          onClose={() => setShowMealEntry(false)}
-        />
-      )}
     </div>
   );
 };
