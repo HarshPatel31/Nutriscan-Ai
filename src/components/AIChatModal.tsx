@@ -1,10 +1,12 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Send, User, Bot } from 'lucide-react';
+import { Brain, Send, User, Bot, AlertTriangle } from 'lucide-react';
+import { sanitizeInput, validateApiKey, aiChatRateLimiter } from '@/utils/security';
+import { secureStorage } from '@/utils/secureStorage';
+import { toast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -29,20 +31,44 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState(() => {
+    return secureStorage.getItem('groq_api_key') || '';
+  });
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    const sanitizedInput = sanitizeInput(input);
+    if (!sanitizedInput.trim()) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter a valid message.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    if (!apiKey.trim()) {
-      alert('Please enter your Groq API key first. Get a free API key from https://console.groq.com/keys');
+    if (!apiKey.trim() || !validateApiKey(apiKey)) {
+      toast({
+        title: "Invalid API Key",
+        description: "Please enter a valid Groq API key.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Rate limiting check
+    if (!aiChatRateLimiter.isAllowed('user')) {
+      toast({
+        title: "Rate Limited",
+        description: "Too many requests. Please wait a moment before trying again.",
+        variant: "destructive",
+      });
       return;
     }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: sanitizedInput,
       timestamp: new Date()
     };
 
@@ -51,51 +77,86 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
     setIsLoading(true);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful nutrition and fitness AI assistant. Provide accurate, helpful advice about food, nutrition, exercise, diet plans, and health. Keep responses concise and practical.'
+              content: 'You are a helpful nutrition and fitness AI assistant. Provide accurate, helpful advice about food, nutrition, exercise, diet plans, and health. Keep responses concise and practical. Do not provide medical advice for serious conditions.'
             },
-            ...messages.slice(-5).map(msg => ({ role: msg.role, content: msg.content })),
-            { role: 'user', content: input }
+            ...messages.slice(-5).map(msg => ({ 
+              role: msg.role, 
+              content: sanitizeInput(msg.content) 
+            })),
+            { role: 'user', content: sanitizedInput }
           ],
           temperature: 0.7,
           max_tokens: 500
         }),
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Failed to get AI response');
+        throw new Error(`API request failed with status ${response.status}`);
       }
 
       const data = await response.json();
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid response format from API');
+      }
+
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.choices[0].message.content,
+        content: sanitizeInput(data.choices[0].message.content),
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error('AI Chat Error:', error);
-      const errorMessage: Message = {
+      
+      let errorMessage = 'Sorry, I encountered an error. Please try again.';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timed out. Please try again.';
+        } else if (error.message.includes('401')) {
+          errorMessage = 'Invalid API key. Please check your credentials.';
+        }
+      }
+
+      const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please check your API key and try again.',
+        content: errorMessage,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApiKeyChange = (value: string) => {
+    const sanitizedKey = sanitizeInput(value);
+    setApiKey(sanitizedKey);
+    
+    if (sanitizedKey) {
+      secureStorage.setItem('groq_api_key', sanitizedKey);
+    } else {
+      secureStorage.removeItem('groq_api_key');
     }
   };
 
@@ -121,15 +182,19 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
         <div className="flex flex-col h-full gap-4">
           {!apiKey && (
             <div className="p-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-lg">
-              <p className="text-purple-300 text-sm mb-2">
-                Enter your free Groq API key to start chatting:
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                <p className="text-purple-300 text-sm">
+                  Enter your free Groq API key to start chatting:
+                </p>
+              </div>
               <Input
                 type="password"
                 placeholder="Enter Groq API key..."
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => handleApiKeyChange(e.target.value)}
                 className="bg-gray-800 border-purple-500/30 text-white placeholder-gray-400"
+                maxLength={200}
               />
               <p className="text-xs text-gray-400 mt-1">
                 Get a free API key at{' '}
@@ -210,6 +275,7 @@ const AIChatModal = ({ isOpen, onClose }: AIChatModalProps) => {
               placeholder="Ask about nutrition, exercises, diet plans..."
               disabled={isLoading || !apiKey}
               className="flex-1 bg-gray-800 border-purple-500/30 text-white placeholder-gray-400"
+              maxLength={500}
             />
             <Button
               onClick={sendMessage}

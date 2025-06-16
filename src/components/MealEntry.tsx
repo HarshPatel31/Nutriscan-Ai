@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import MealSearchModal from './MealSearchModal';
 import { Meal } from '@/data/mealsDatabase';
+import { sanitizeInput } from '@/utils/security';
+import { Textarea } from '@/components/ui/textarea';
 
 interface MealEntryProps {
   isOpen: boolean;
@@ -23,7 +25,10 @@ const MealEntry = ({ isOpen, onClose }: MealEntryProps) => {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   const handleSave = () => {
-    if (!mealName || !mealTime) {
+    const sanitizedMealName = sanitizeInput(mealName);
+    const sanitizedNotes = sanitizeInput(notes);
+    
+    if (!sanitizedMealName || !mealTime) {
       toast({
         title: "Missing Information",
         description: "Please fill in meal name and time.",
@@ -34,8 +39,15 @@ const MealEntry = ({ isOpen, onClose }: MealEntryProps) => {
 
     toast({
       title: "Meal Added!",
-      description: `${mealName} has been added to your diary.`,
+      description: `${sanitizedMealName} has been added to your diary.`,
     });
+    
+    // Reset form
+    setMealName('');
+    setMealTime('');
+    setMealType('breakfast');
+    setNotes('');
+    setSelectedMeal(null);
     onClose();
   };
 
@@ -47,6 +59,16 @@ const MealEntry = ({ isOpen, onClose }: MealEntryProps) => {
       title: "Meal Selected!",
       description: `${meal.name} from ${meal.cuisine} cuisine selected.`,
     });
+  };
+
+  const handleMealNameChange = (value: string) => {
+    const sanitized = sanitizeInput(value);
+    setMealName(sanitized);
+  };
+
+  const handleNotesChange = (value: string) => {
+    const sanitized = sanitizeInput(value);
+    setNotes(sanitized);
   };
 
   if (!isOpen) return null;
@@ -69,8 +91,9 @@ const MealEntry = ({ isOpen, onClose }: MealEntryProps) => {
                   id="meal-name"
                   placeholder="e.g., Grilled Chicken Salad"
                   value={mealName}
-                  onChange={(e) => setMealName(e.target.value)}
+                  onChange={(e) => handleMealNameChange(e.target.value)}
                   className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                  maxLength={100}
                 />
                 <Button
                   onClick={() => setShowMealSearch(true)}
@@ -124,12 +147,13 @@ const MealEntry = ({ isOpen, onClose }: MealEntryProps) => {
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="text-gray-300">Notes (Optional)</Label>
-              <textarea
+              <Textarea
                 id="notes"
                 placeholder="Add any notes about your meal..."
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="flex min-h-[80px] w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white ring-offset-background placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={(e) => handleNotesChange(e.target.value)}
+                className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                maxLength={500}
               />
             </div>
 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ArrowLeft, Calendar, TrendingUp, Apple, Droplets, Zap, Scale, Camera, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,9 +9,34 @@ import DailyChart from '@/components/DailyChart';
 import WeeklyProgress from '@/components/WeeklyProgress';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { validateNumericInput, sanitizeInput } from '@/utils/security';
+import { secureStorage } from '@/utils/secureStorage';
 
 const Dashboard = () => {
-  const [userWeight, setUserWeight] = useState('70');
+  const [userWeight, setUserWeight] = useState(() => {
+    return secureStorage.getItem('user_weight') || '70';
+  });
+  
+  const handleWeightChange = (value: string) => {
+    try {
+      const sanitizedValue = sanitizeInput(value);
+      if (sanitizedValue === '') {
+        setUserWeight('');
+        return;
+      }
+      
+      const validatedWeight = validateNumericInput(sanitizedValue, 20, 300);
+      const weightStr = validatedWeight.toString();
+      setUserWeight(weightStr);
+      secureStorage.setItem('user_weight', weightStr);
+    } catch (error) {
+      toast({
+        title: "Invalid Weight",
+        description: "Please enter a valid weight between 20 and 300 kg.",
+        variant: "destructive",
+      });
+    }
+  };
   
   const weight = parseFloat(userWeight) || 70;
   
@@ -56,6 +80,28 @@ const Dashboard = () => {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file type and size
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a JPEG, PNG, or WebP image.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (file.size > maxSize) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       toast({
         title: "Image Uploaded!",
         description: "Analyzing your food image...",
@@ -111,8 +157,10 @@ const Dashboard = () => {
                 <Input
                   id="weight"
                   type="number"
+                  min="20"
+                  max="300"
                   value={userWeight}
-                  onChange={(e) => setUserWeight(e.target.value)}
+                  onChange={(e) => handleWeightChange(e.target.value)}
                   className="bg-gray-800/50 border-gray-600 text-white mt-1"
                 />
               </div>
@@ -226,7 +274,7 @@ const Dashboard = () => {
                 
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageUpload}
                   className="hidden"
                   id="food-upload-dashboard"
