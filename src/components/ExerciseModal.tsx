@@ -4,6 +4,7 @@ import { X, Search, Dumbbell, Heart, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { exerciseAnimations } from '@/data/exerciseAnimations';
 
 interface ExerciseModalProps {
   isOpen: boolean;
@@ -82,7 +83,7 @@ const ExerciseModal = ({ isOpen, onClose }: ExerciseModalProps) => {
     { name: 'Cobra Pose', duration: '15-30 sec', difficulty: 'Beginner' },
     { name: 'Bridge Pose', duration: '30-60 sec', difficulty: 'Beginner' },
     { name: 'Plank Pose', duration: '30-60 sec', difficulty: 'Beginner' },
-    { name: 'Seated Forward Fold', duration: '1-3 min', difficulty: 'Beginner' },
+    { name: 'Seated Forward Fol', duration: '1-3 min', difficulty: 'Beginner' },
     { name: 'Pigeon Pose', duration: '1-3 min', difficulty: 'Intermediate' },
     { name: 'Camel Pose', duration: '15-30 sec', difficulty: 'Intermediate' },
     { name: 'Crow Pose', duration: '10-30 sec', difficulty: 'Advanced' },
@@ -210,9 +211,23 @@ const ExerciseModal = ({ isOpen, onClose }: ExerciseModalProps) => {
     }
   };
 
+  const getExerciseAnimation = (exerciseName: string) => {
+    const exerciseData = exerciseAnimations[exerciseName];
+    if (exerciseData) {
+      return exerciseData;
+    }
+    // Default animation for exercises not in the database
+    return {
+      name: exerciseName,
+      animation: '💪',
+      description: 'Perform this exercise with proper form',
+      tips: ['Maintain good posture', 'Control your movements', 'Breathe properly']
+    };
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-purple-500/30 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-gradient-to-br from-gray-900 to-black border border-purple-500/30 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
         <div className="p-6 border-b border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">Exercise Library</h2>
@@ -279,24 +294,50 @@ const ExerciseModal = ({ isOpen, onClose }: ExerciseModalProps) => {
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {getExercises().map((exercise, index) => (
-              <Card key={index} className="bg-gray-800/30 border-gray-700 hover:bg-gray-700/30 transition-colors">
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-white mb-2">{exercise.name}</h3>
-                  <div className="space-y-1 text-sm">
-                    {'sets' in exercise && exercise.sets && (
-                      <p className="text-gray-300">Sets: {exercise.sets}</p>
-                    )}
-                    {'duration' in exercise && exercise.duration && (
-                      <p className="text-gray-300">Duration: {exercise.duration}</p>
-                    )}
-                    <p className={`font-medium ${getDifficultyColor(exercise.difficulty)}`}>
-                      {exercise.difficulty}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {getExercises().map((exercise, index) => {
+              const animationData = getExerciseAnimation(exercise.name);
+              return (
+                <Card key={index} className="bg-gray-800/30 border-gray-700 hover:bg-gray-700/30 transition-all duration-200 hover:scale-105">
+                  <CardContent className="p-4">
+                    <div className="text-center mb-3">
+                      <div className="text-4xl mb-2 animate-pulse">{animationData.animation}</div>
+                      <h3 className="font-semibold text-white mb-1">{exercise.name}</h3>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm mb-3">
+                      {'sets' in exercise && exercise.sets && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Sets:</span>
+                          <span className="text-green-400">{exercise.sets}</span>
+                        </div>
+                      )}
+                      {'duration' in exercise && exercise.duration && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Duration:</span>
+                          <span className="text-blue-400">{exercise.duration}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Difficulty:</span>
+                        <span className={`font-medium ${getDifficultyColor(exercise.difficulty)}`}>
+                          {exercise.difficulty}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-600 pt-3">
+                      <p className="text-xs text-gray-300 mb-2">{animationData.description}</p>
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-purple-400">Tips:</p>
+                        {animationData.tips.slice(0, 2).map((tip, tipIndex) => (
+                          <p key={tipIndex} className="text-xs text-gray-400">• {tip}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>
